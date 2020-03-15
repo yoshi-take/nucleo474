@@ -1,5 +1,5 @@
-#ifndef INC_HAL_HAL_SPI_H_
-#define INC_HAL_HAL_SPI_H_
+#ifndef INC_HAL_HAL_ENC_H_
+#define INC_HAL_HAL_ENC_H_
 
 #ifdef	__cplusplus
 extern	"C"	{
@@ -9,7 +9,8 @@ extern	"C"	{
 // インクルードファイル（include）
 //**************************************************
 #include "main.h"
-#include "typedefine.h"
+#include "typedefine.h"		// 型定義
+#include <stdio.h>
 
 //**************************************************
 // 定義（define）
@@ -18,6 +19,12 @@ extern	"C"	{
 //**************************************************
 // 列挙体（enum）
 //**************************************************
+/* エンコーダID */
+typedef enum{
+	ENC_R = 0,				// 右エンコーダ
+	ENC_L,						// 左エンコーダ
+	ENC_MAX
+}enENC_ID;
 
 //**************************************************
 // 構造体（struct）
@@ -30,11 +37,7 @@ extern	"C"	{
 //**************************************************
 // プロトタイプ宣言（ファイル内で必要なものだけ記述）
 //**************************************************
-PUBLIC SPI_init( void );
-PUBLIC SPI_Communication(SPI_TypeDef *SPIx, CHAR *tx_data, CHAR *rx_data, CHAR length, GPIO_TypeDef *GPIOx, uint32_t CS_PIN);
+PUBLIC SHORT ENC_getCnt( enENC_ID en_id );
+PUBLIC void ENC_Check( void ) ;
 
-#ifdef	__cplusplus
-}
-#endif
-
-#endif
+#endif /* INC_HAL_HAL_ENC_H_ */

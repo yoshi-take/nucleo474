@@ -8,6 +8,7 @@
 #include "hal/hal_tim.h"
 #include "hal/hal_led.h"
 #include "hal/hal_dist.h"
+#include "hal/hal_gyro.h"
 
 //**************************************************
 // 定義（define）
@@ -107,8 +108,8 @@ PUBLIC void INTC_sen( void )
 	/* センサ処理  */
 	switch( i ){
 		case 0:		// ジャイロセンサ
-			//GYRO_Pol();		// 先に平均値からジャイロの値を算出する
-			//GYRO_getVal();
+//			GYRO_Pol();		// 先に平均値からジャイロの値を算出する
+//			GYRO_getVal();
 			break;
 
 		case 1:		// 前壁センサ

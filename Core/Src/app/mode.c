@@ -10,6 +10,8 @@
 #include "hal/hal_dcm.h"
 #include "hal/hal_battery.h"
 #include "hal/hal_tof.h"
+#include "hal/hal_gyro.h"
+#include "hal/hal_enc.h"
 
 
 //**************************************************
@@ -87,9 +89,16 @@ PUBLIC void	MODE_exe( void ){
 			break;
 
 		case MODE_6:
+			while(1){
+				GYRO_get_WHOAMI();
+				//printf("NowAngleSpeed:%5f\n\r",GYRO_getNowAngleSpeed());
+				LL_mDelay(20);
+			}
 			break;
 
 		case MODE_7:
+			//ENC_getCnt(ENC_R);
+			ENC_Check();
 			break;
 
 		case MODE_8:

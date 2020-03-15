@@ -4,8 +4,8 @@
 #include "main.h"
 #include "typedefine.h"		// 型定義
 #include <stdio.h>
+#include "parameter.h"		// parameter
 
-#include "hal/hal_spi.h"
 #include "hal/hal_gyro.h"
 
 //**************************************************
@@ -24,6 +24,7 @@
 // グローバル変数
 //**************************************************
 /* ジャイロセンサ */
+extern	SPI_HandleTypeDef hspi2;
 PUBLIC CHAR c_GyroVal_Lo;								// ジャイロセンサ値(下位)
 PUBLIC CHAR c_GyroVal_Hi;									// ジャイロセンサ値(上位)
 PUBLIC volatile FLOAT  f_NowGyroAngle;		 		// ジャイロセンサの現在角度
@@ -32,7 +33,6 @@ PUBLIC volatile FLOAT  f_NowGyroAngleSpeed;		// ジャイロセンサの現在�
 PUBLIC CHAR 	c_AccelVal_Lo;								// 加速度センサ値(下位)
 PUBLIC CHAR 	c_AccelVal_Hi;								// 加速度センサ値(上位)
 PUBLIC volatile FLOAT  	f_NowAccel;						// 進行方向の現在加速度
-PRIVATE SHORT	c_AccelValBuf[10];							// 加速度センサのバッファ
 
 PUBLIC	CHAR c_WhoamiVal;
 
@@ -56,8 +56,9 @@ PUBLIC void GYRO_Write(CHAR reg, CHAR data){
 	tx_data[0]	= reg & 0x7F;
 	tx_data[1]	= data;
 
-	SPI_Communication(SPI2, tx_data, rx_data, 2,CS_GYRO_GPIO_Port, CS_GYRO_Pin);
-
+	 LL_GPIO_ResetOutputPin(CS_GYRO_GPIO_Port, CS_GYRO_Pin);
+	 HAL_SPI_TransmitReceive(&hspi2, tx_data, rx_data, 1, 1);
+	 LL_GPIO_SetOutputPin(CS_GYRO_GPIO_Port, CS_GYRO_Pin);
 }
 
 // *************************************************************************
@@ -77,7 +78,9 @@ PUBLIC void GYRO_Read(CHAR reg, CHAR *p_SpiRcvData){
 	tx_data[0]	= reg | 0x80;
 	tx_data[1]	= 0x00;				// ダミー
 
-	SPI_Communication(SPI2, tx_data, rx_data, 2,CS_GYRO_GPIO_Port, CS_GYRO_Pin);
+	 LL_GPIO_ResetOutputPin(CS_GYRO_GPIO_Port, CS_GYRO_Pin);
+	 HAL_SPI_TransmitReceive(&hspi2, tx_data, rx_data, 2, 1);
+	 LL_GPIO_SetOutputPin(CS_GYRO_GPIO_Port, CS_GYRO_Pin);
 
 	*p_SpiRcvData	= rx_data[1];
 }
@@ -91,7 +94,7 @@ PUBLIC void GYRO_Read(CHAR reg, CHAR *p_SpiRcvData){
 // **************************    履    歴    *******************************
 //		v1.0		2020.3.4			TKR				新規
 // *************************************************************************/
-PUBLIC GYRO_init( void ){
+PUBLIC void GYRO_init( void ){
 
 	CHAR	c_dummy;		// 読み出し用
 
@@ -168,6 +171,7 @@ PUBLIC GYRO_init( void ){
 			}else{
 				printf("SPI_USER_CONTROL:failure\n\r");
 			}
+		}
 
 		/* SPI有効[No.112] */
 		while(1){
@@ -221,7 +225,6 @@ PUBLIC GYRO_init( void ){
 		if( 0x12 == c_WhoamiVal )printf("success\n\r");
 
 }
-
 // *************************************************************************
 //   機能		： ジャイロの現在の角度を取得する
 //   注意		： なし
@@ -306,6 +309,7 @@ PUBLIC	void GYRO_get_WHOAMI( void ){
 
 	GYRO_Read(SPI_WHO_AM_I, &c_WhoamiVal);
 	printf("Who am I = 0x%x\n\r",c_WhoamiVal);
+	LL_mDelay(100);
 }
 
 // *************************************************************************
