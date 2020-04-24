@@ -1,6 +1,7 @@
 //**************************************************
 // インクルードファイル（include）
 //**************************************************
+#include <hal/hal_battery.h>
 #include "main.h"
 #include "typedefine.h"
 #include <stdio.h>
@@ -8,10 +9,10 @@
 #include "app/mode.h"
 #include "hal/hal_led.h"
 #include "hal/hal_dcm.h"
-#include "hal/hal_battery.h"
 #include "hal/hal_tof.h"
 #include "hal/hal_gyro.h"
 #include "hal/hal_enc.h"
+#include "hal/hal_dist.h"
 
 
 //**************************************************
@@ -102,12 +103,22 @@ PUBLIC void	MODE_exe( void ){
 			break;
 
 		case MODE_8:
+			LL_GPIO_SetOutputPin(IR_SIDE_R_GPIO_Port, IR_SIDE_R_Pin);
+			LL_GPIO_SetOutputPin(IR_SIDE_L_GPIO_Port, IR_SIDE_L_Pin);
+			LL_GPIO_SetOutputPin(IR_FRONT_L_GPIO_Port, IR_FRONT_L_Pin);
+			LL_GPIO_SetOutputPin(IR_FRONT_R_GPIO_Port, IR_FRONT_R_Pin);
 			break;
 
 		case MODE_9:
+			ADC1_DMA1_TransferComplete_Callback();
 			break;
 
 		case MODE_10:
+			while(1){
+				printf("データ\n\r");
+				printf("%d\n\r",ToF_readRangeContinuous());
+				LL_mDelay(100);
+			}
 			break;
 
 		case MODE_11:

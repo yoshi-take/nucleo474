@@ -33,6 +33,10 @@ extern	"C"	{
 PUBLIC void DIST_Pol_Side( void );
 PUBLIC void DIST_Pol_Front( void );
 
+PUBLIC void ADC1_Start(void);
+PUBLIC void ADC1_Start_DMA1(void);
+PUBLIC void ADC1_DMA1_ConvertStart(void);
+PUBLIC void ADC1_DMA1_TransferComplete_Callback(void);
 
 #ifdef	__cplusplus
 }

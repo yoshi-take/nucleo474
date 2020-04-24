@@ -1,11 +1,11 @@
 //**************************************************
 // インクルードファイル（include）
 //**************************************************
+#include <hal/hal_battery.h>		// BATT
 #include "main.h"
 #include "typedefine.h"				// 型定義
 #include <stdio.h>
 
-#include "hal/hal_battery.h"		// BATT
 #include "hal/hal_led.h"			// LED
 
 //**************************************************

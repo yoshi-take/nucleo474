@@ -24,6 +24,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "hal/hal_tim.h"
+#include "hal/hal_dist.h"
 
 /* USER CODE END Includes */
 
@@ -198,6 +199,23 @@ void SysTick_Handler(void)
 /* For the available peripheral interrupt handler names,                      */
 /* please refer to the startup file (startup_stm32g4xx.s).                    */
 /******************************************************************************/
+
+/**
+  * @brief This function handles DMA1 channel1 global interrupt.
+  */
+void DMA1_Channel1_IRQHandler(void)
+{
+  /* USER CODE BEGIN DMA1_Channel1_IRQn 0 */
+	if(LL_DMA_IsActiveFlag_TC1(DMA1)){
+		LL_DMA_ClearFlag_TC1(DMA1);		// DMAの割り込み変換終�?フラグをクリア
+		ADC1_DMA1_TransferComplete_Callback();
+	}
+  /* USER CODE END DMA1_Channel1_IRQn 0 */
+  
+  /* USER CODE BEGIN DMA1_Channel1_IRQn 1 */
+
+  /* USER CODE END DMA1_Channel1_IRQn 1 */
+}
 
 /**
   * @brief This function handles TIM6 global interrupt, DAC1 and DAC3 channel underrun error interrupts.

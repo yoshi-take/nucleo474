@@ -30,6 +30,7 @@ extern "C" {
 /* Includes ------------------------------------------------------------------*/
 #include "stm32g4xx_hal.h"
 #include "stm32g4xx_ll_adc.h"
+#include "stm32g4xx_ll_dma.h"
 #include "stm32g4xx_ll_tim.h"
 #include "stm32g4xx_ll_usart.h"
 #include "stm32g4xx_ll_rcc.h"
@@ -41,7 +42,6 @@ extern "C" {
 #include "stm32g4xx_ll_cortex.h"
 #include "stm32g4xx_ll_utils.h"
 #include "stm32g4xx_ll_pwr.h"
-#include "stm32g4xx_ll_dma.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -111,22 +111,20 @@ void Error_Handler(void);
 #define MISO_GYRO_GPIO_Port GPIOB
 #define MOSI_GYRO_Pin LL_GPIO_PIN_15
 #define MOSI_GYRO_GPIO_Port GPIOB
-#define LED2_Pin LL_GPIO_PIN_9
-#define LED2_GPIO_Port GPIOC
 #define LED1_Pin LL_GPIO_PIN_8
 #define LED1_GPIO_Port GPIOA
 #define SELECT_Pin LL_GPIO_PIN_11
 #define SELECT_GPIO_Port GPIOA
-#define LED3_Pin LL_GPIO_PIN_12
-#define LED3_GPIO_Port GPIOA
+#define LED2_Pin LL_GPIO_PIN_12
+#define LED2_GPIO_Port GPIOA
 #define T_SWDIO_Pin LL_GPIO_PIN_13
 #define T_SWDIO_GPIO_Port GPIOA
 #define T_SWCLK_Pin LL_GPIO_PIN_14
 #define T_SWCLK_GPIO_Port GPIOA
 #define I2C_SCL_Pin LL_GPIO_PIN_15
 #define I2C_SCL_GPIO_Port GPIOA
-#define IR_FRONT_R_Pin LL_GPIO_PIN_3
-#define IR_FRONT_R_GPIO_Port GPIOB
+#define LED3_Pin LL_GPIO_PIN_3
+#define LED3_GPIO_Port GPIOB
 #define DCM_L_0_Pin LL_GPIO_PIN_4
 #define DCM_L_0_GPIO_Port GPIOB
 #define DCM_L_1_Pin LL_GPIO_PIN_5
@@ -135,6 +133,8 @@ void Error_Handler(void);
 #define DCM_R_0_GPIO_Port GPIOB
 #define DCM_R_1_Pin LL_GPIO_PIN_7
 #define DCM_R_1_GPIO_Port GPIOB
+#define IR_FRONT_R_Pin LL_GPIO_PIN_8
+#define IR_FRONT_R_GPIO_Port GPIOB
 #define I2C_SDA_Pin LL_GPIO_PIN_9
 #define I2C_SDA_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */

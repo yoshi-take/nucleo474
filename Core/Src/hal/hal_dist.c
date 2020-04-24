@@ -1,12 +1,12 @@
 //**************************************************
 // インクルードファイル（include）
 //**************************************************
+#include <hal/hal_dist.h>
 #include "main.h"
 #include "typedefine.h"
 #include <stdio.h>
 
 #include "app/mode.h"
-#include "hal/hal_dist.h"
 #include "hal/hal_led.h"
 #include "hal/hal_tim.h"
 #include "parameter.h"
@@ -15,6 +15,7 @@
 //**************************************************
 // 定義（define）
 //**************************************************
+#define ADC_CONVERT_DATA_BUFFR_SIZE	((uint32_t)4)
 
 //**************************************************
 // 列挙体（enum）
@@ -67,6 +68,7 @@ typedef struct {
 //**************************************************
 // グローバル変数
 //**************************************************
+uint16_t	adcConverterData[ADC_CONVERT_DATA_BUFFR_SIZE]	= {4,4,4,4};
 
 
 
@@ -156,3 +158,38 @@ PUBLIC void DIST_Pol_Front( void )
 	LL_GPIO_ResetOutputPin(IR_FRONT_R_GPIO_Port,IR_FRONT_R_Pin);
 	LL_GPIO_ResetOutputPin(IR_FRONT_L_GPIO_Port,IR_FRONT_L_Pin);
 }
+
+// ADCの有効化，AD変換終了時のDMAの割り込みを有効化
+PUBLIC void ADC1_Start(void){
+	LL_DMA_EnableIT_TC(DMA1,LL_DMA_CHANNEL_1);
+	LL_ADC_Enable(ADC1);
+}
+
+// ADC
+PUBLIC void ADC1_Start_DMA1(void){
+	ADC1_DMA1_ConvertStart();
+}
+
+// ADCのDMA変換を開始する
+PUBLIC void ADC1_DMA1_ConvertStart(void){
+	LL_DMA_DisableChannel(DMA1,LL_DMA_CHANNEL_1);
+
+	LL_DMA_ConfigAddresses(DMA1,LL_DMA_CHANNEL_1,
+											LL_ADC_DMA_GetRegAddr(ADC1,LL_ADC_DMA_REG_REGULAR_DATA),
+											(uint32_t)&adcConverterData,LL_DMA_DIRECTION_PERIPH_TO_MEMORY);	// DMAのアドレスを決める
+
+	LL_DMA_SetDataLength(DMA1,LL_DMA_CHANNEL_1,ADC_CONVERT_DATA_BUFFR_SIZE);	// データのアドレスの長さを決める
+
+	LL_DMA_EnableChannel(DMA1,LL_DMA_CHANNEL_1);
+
+	LL_ADC_REG_StartConversion(ADC1);		// AD変換の処理を始める
+
+}
+
+PUBLIC void ADC1_DMA1_TransferComplete_Callback(void){
+
+	LL_ADC_ClearFlag_EOC(ADC1);
+	printf("%d,%d,%d,%d\n\r",adcConverterData[0],adcConverterData[1],adcConverterData[2],adcConverterData[3]);
+	ADC1_Start_DMA1();
+}
+

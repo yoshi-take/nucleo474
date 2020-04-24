@@ -1,13 +1,13 @@
 //**************************************************
 // インクルードファイル（include）
 //**************************************************
+#include <hal/hal_dist.h>
 #include "main.h"
 #include "typedefine.h"
 #include <stdio.h>
 
 #include "hal/hal_tim.h"
 #include "hal/hal_led.h"
-#include "hal/hal_dist.h"
 #include "hal/hal_gyro.h"
 
 //**************************************************
