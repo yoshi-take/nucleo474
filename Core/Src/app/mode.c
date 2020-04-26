@@ -114,6 +114,7 @@ PUBLIC void	MODE_exe( void ){
 			break;
 
 		case MODE_10:
+			printf("データ\n\r");
 			while(1){
 				printf("データ\n\r");
 				printf("%d\n\r",ToF_readRangeContinuous());

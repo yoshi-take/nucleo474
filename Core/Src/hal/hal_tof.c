@@ -29,12 +29,13 @@ PRIVATE CHAR	txID				= ADR_TOF_ID << 1;								// ToFのID（シフトする必�
 PRIVATE CHAR		rxBuffer[2];		// 受信バッファ(2Byte)
 
 // VL6180X
-PRIVATE uint8_t		address;
+PRIVATE uint8_t		address = 0x29<<1;
 PRIVATE uint8_t		scaling;
 PRIVATE uint8_t		ptp_offset;
 PRIVATE uint16_t		io_timeout;
 PRIVATE BOOL		did_timeout;
 PRIVATE uint16_t	const ScalerValues[] = {0, 253, 127, 84};
+
 
 //**************************************************
 // プロトタイプ宣言（ファイル内で必要なものだけ記述）
@@ -299,7 +300,7 @@ PUBLIC void ToF_writeReg( uint16_t reg, uint8_t value ){
 // *************************************************************************/
 PUBLIC void ToF_writeReg16bit( uint16_t reg, uint16_t value ){
 
-	HAL_I2C_Master_Transmit(&hi2c1, reg, value, 2, 100);				//
+	HAL_I2C_Master_Transmit(&hi2c1, reg, value, 2, 100);
 
 }
 
@@ -315,7 +316,12 @@ PUBLIC void ToF_writeReg16bit( uint16_t reg, uint16_t value ){
 PUBLIC uint8_t ToF_readReg(uint16_t reg){
 
 	uint8_t	value = 0;
-	HAL_I2C_Master_Receive(&hi2c1, reg, value, 1, 100);				//
+	uint8_t	regBuff[2];
+	regBuff[0]	= (reg>>8) & 0xff;
+	regBuff[1] = reg & 0xff;
+
+	HAL_I2C_Master_Transmit(&hi2c1,address,regBuff,2,300);
+	HAL_I2C_Master_Receive(&hi2c1,address, &value, 1, 100);
 
 	return value;
 }
@@ -332,7 +338,11 @@ PUBLIC uint8_t ToF_readReg(uint16_t reg){
 PUBLIC uint16_t ToF_readReg16bit( uint16_t reg){
 
 	uint16_t	value = 0;
-	HAL_I2C_Master_Receive(&hi2c1, reg, value, 2, 100);				//
+	uint8_t		temp_val[2];
+	HAL_I2C_Master_Transmit(&hi2c1,address,reg,2,100);
+	HAL_I2C_Master_Receive(&hi2c1,address, temp_val ,2, 100);
+
+	value		= (uint16_t)(temp_val[1] | (temp_val[0] << 8) );					// 受信したデータの結合
 
 	return value;
 }
