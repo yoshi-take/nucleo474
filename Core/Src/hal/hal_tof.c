@@ -285,7 +285,12 @@ PUBLIC SHORT ToF_readRangeContinuous( void ){
 // *************************************************************************/
 PUBLIC void ToF_writeReg( uint16_t reg, uint8_t value ){
 
-	HAL_I2C_Master_Transmit(&hi2c1, reg, value, 1, 1000);				//
+	uint8_t		regBuff[3]	= {0,0,0};
+	regBuff[0]	= (reg>>8) & 0xff;
+	regBuff[1] = reg & 0xff;
+	regBuff[2] = value;
+
+	HAL_I2C_Master_Transmit(&hi2c1, address, regBuff, 3, 1000);
 
 }
 
@@ -300,7 +305,13 @@ PUBLIC void ToF_writeReg( uint16_t reg, uint8_t value ){
 // *************************************************************************/
 PUBLIC void ToF_writeReg16bit( uint16_t reg, uint16_t value ){
 
-	HAL_I2C_Master_Transmit(&hi2c1, reg, value, 2, 100);
+	uint8_t		regBuff[4]	= {0,0,0,0};
+	regBuff[0]	= (reg>>8) & 0xff;
+	regBuff[1] = reg & 0xff;
+	regBuff[2] = (value>>8) & 0xff;
+	regBuff[3] = value & 0xff;
+
+	HAL_I2C_Master_Transmit(&hi2c1, address, regBuff, 4, 100);
 
 }
 
@@ -315,15 +326,15 @@ PUBLIC void ToF_writeReg16bit( uint16_t reg, uint16_t value ){
 // *************************************************************************/
 PUBLIC uint8_t ToF_readReg(uint16_t reg){
 
-	uint8_t	value = 0;
+	uint8_t	recv = 0;
 	uint8_t	regBuff[2];
 	regBuff[0]	= (reg>>8) & 0xff;
 	regBuff[1] = reg & 0xff;
 
-	HAL_I2C_Master_Transmit(&hi2c1,address,regBuff,2,300);
-	HAL_I2C_Master_Receive(&hi2c1,address, &value, 1, 100);
+	HAL_I2C_Master_Transmit(&hi2c1,address,regBuff,2,100);
+	HAL_I2C_Master_Receive(&hi2c1,address, &recv, 1, 100);
 
-	return value;
+	return recv;
 }
 
 // *************************************************************************
@@ -337,12 +348,17 @@ PUBLIC uint8_t ToF_readReg(uint16_t reg){
 // *************************************************************************/
 PUBLIC uint16_t ToF_readReg16bit( uint16_t reg){
 
-	uint16_t	value = 0;
-	uint8_t		temp_val[2];
-	HAL_I2C_Master_Transmit(&hi2c1,address,reg,2,100);
-	HAL_I2C_Master_Receive(&hi2c1,address, temp_val ,2, 100);
+	uint8_t		recv[2]	= {0,0};					// 受信したデータを格納
+	uint16_t	value		= 0;							// 受信したデータを連結させる
 
-	value		= (uint16_t)(temp_val[1] | (temp_val[0] << 8) );					// 受信したデータの結合
+	uint8_t		regBuff[2]	= {0,0};				// 読み出し先のレジスタ
+	regBuff[0]	= (reg>>8) & 0xff;
+	regBuff[1] = reg & 0xff;
+
+	HAL_I2C_Master_Transmit(&hi2c1,address,regBuff,2,100);
+	HAL_I2C_Master_Receive(&hi2c1,address, recv ,2, 100);
+
+	value		= (uint16_t)(recv[1] | (recv[0] << 8) );					// 受信したデータの結合
 
 	return value;
 }
