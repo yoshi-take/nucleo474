@@ -19,6 +19,8 @@ extern	"C"	{
 #define	ADR_TOF_MEASURE		(0xD3)
 
 // VL6180X
+#define ADR_VL6180X_ID				(0x29)
+
 #define IDENTIFICATION__MODEL_ID						(0x000)
 #define IDENTIFICATION__MODEL_REV_MAJOR       	(0x001)
 #define IDENTIFICATION__MODEL_REV_MINOR       	(0x002)

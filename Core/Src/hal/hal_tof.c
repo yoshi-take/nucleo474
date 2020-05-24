@@ -26,15 +26,14 @@ extern	I2C_HandleTypeDef hi2c1;
 PRIVATE CHAR	txBuffer[2]	= {ADR_TOF_MEASURE,ADR_TOF_ID};		// [1]：ToFのID	[0]：ToFのコマンド
 PRIVATE CHAR	txID				= ADR_TOF_ID << 1;								// ToFのID（シフトする必要有）
 
-PRIVATE CHAR		rxBuffer[2];		// 受信バッファ(2Byte)
-
 // VL6180X
-PRIVATE uint8_t		address = 0x29<<1;
-PRIVATE uint8_t		scaling;
-PRIVATE uint8_t		ptp_offset;
-PRIVATE uint16_t		io_timeout;
-PRIVATE BOOL		did_timeout;
-PRIVATE uint16_t	const ScalerValues[] = {0, 253, 127, 84};
+PRIVATE uint8_t			address = ADR_VL6180X_ID<<1;
+PRIVATE uint8_t			scaling;
+PRIVATE uint8_t			ptp_offset;
+PRIVATE uint16_t const	ScalerValues[] = {0, 253, 127, 84};
+
+//PRIVATE uint16_t		io_timeout;
+//PRIVATE BOOL		did_timeout;
 
 
 //**************************************************
@@ -53,17 +52,31 @@ PRIVATE uint16_t	const ScalerValues[] = {0, 253, 127, 84};
 PUBLIC SHORT TOF_getData(void){
 
 #ifdef MTOF171000C0	//MTOF171000C0
-	SHORT	s_value	= 0;
+	uint8_t		rxBuffer[2];		// 受信バッファ(2Byte)
+	SHORT		s_value	= 0;
+
 	HAL_I2C_Master_Transmit(&hi2c1, txID, txBuffer, 2, 1000);				// ID送信→コマンド送信→ID送信
 	HAL_I2C_Master_Receive(&hi2c1, txID,rxBuffer, 2, 1000);				// 受信
-
+/*
+	HAL_I2C_Master_Transmit(&hi2c1, txID, 0xD3, 1, 1000);				// ID送信→コマンド送信→ID送信
+	HAL_I2C_Master_Receive(&hi2c1, txID,rxBuffer, 2, 1000);				// 受信
+*/
 	s_value		= (SHORT)(rxBuffer[1] | (rxBuffer[0] << 8) );					// 受信したデータの結合
 
 	return s_value;
 #else
 	// VL6180X
-
-
+	ToF_writeReg(SYSRANGE__START, 0x01);
+//	uint16_t		millis_start = millis();
+	while ((ToF_readReg(RESULT__INTERRUPT_STATUS_GPIO) & 0x04) == 0){
+//		if (io_timeout > 0 && ((uint16_t)millis() - millis_start) > io_timeout){
+//			did_timeout = TRUE;
+//			return 255;
+//	    }
+	  }
+	  uint8_t range = ToF_readReg(RESULT__RANGE_VAL);
+	  ToF_writeReg(SYSTEM__INTERRUPT_CLEAR, 0x01);
+	  return		(SHORT)scaling *range;
 
 #endif
 }
@@ -94,6 +107,9 @@ PUBLIC void TOF_check(void){
 // *************************************************************************/
 PUBLIC void ToF_init( void ){
 
+#ifdef MTOF171000C0	//MTOF171000C0
+
+#else
 	// Store part-to-part range offset so it can be adjusted if scaling is changed
 	  ptp_offset = ToF_readReg(SYSRANGE__PART_TO_PART_RANGE_OFFSET);
 
@@ -147,6 +163,7 @@ PUBLIC void ToF_init( void ){
 	    // be resolved by resetting the sensor and Arduino again.
 	    ptp_offset *= scaling;
 	  }
+#endif
 }
 
 // *************************************************************************
@@ -202,18 +219,6 @@ PUBLIC void ToF_ConfigureDefault( void ){
 	  ToF_setScaling(1);
 }
 
-// *************************************************************************
-//   機能		：
-//   注意		： なし
-//   メモ		： VL6180X
-//   引数		： なし
-//   返り値	： なし
-// **************************    履    歴    *******************************
-// 		v1.0		2020.4.18
-// *************************************************************************/
-PUBLIC void ToF_setTimeout(){
-
-}
 
 // *************************************************************************
 //   機能		： スケーリングのセット

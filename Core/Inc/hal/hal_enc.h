@@ -15,6 +15,7 @@ extern	"C"	{
 //**************************************************
 // 定義（define）
 //**************************************************
+#define		ENC_RESET_VAL		(16383);
 
 //**************************************************
 // 列挙体（enum）
@@ -39,5 +40,7 @@ typedef enum{
 //**************************************************
 PUBLIC SHORT ENC_getCnt( enENC_ID en_id );
 PUBLIC void ENC_Check( void ) ;
-
+PUBLIC void ENC_GetDiv( LONG* p_r, LONG* p_l );
+PUBLIC void ENC_clr( void );
+PUBLIC BOOL ENC_getSignRot(enENC_ID en_id);
 #endif /* INC_HAL_HAL_ENC_H_ */
