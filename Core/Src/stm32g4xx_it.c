@@ -208,7 +208,7 @@ void DMA1_Channel1_IRQHandler(void)
   /* USER CODE BEGIN DMA1_Channel1_IRQn 0 */
 	if(LL_DMA_IsActiveFlag_TC1(DMA1)){
 		LL_DMA_ClearFlag_TC1(DMA1);		// DMAの割り込み変換終�?フラグをクリア
-		ADC1_DMA1_TransferComplete_Callback();
+		//ADC1_DMA1_TransferComplete_Callback();
 	}
   /* USER CODE END DMA1_Channel1_IRQn 0 */
   
@@ -225,7 +225,6 @@ void TIM6_DAC_IRQHandler(void)
   /* USER CODE BEGIN TIM6_DAC_IRQn 0 */
 	if( LL_TIM_IsActiveFlag_UPDATE(TIM6) == 1 ){
 		LL_TIM_ClearFlag_UPDATE(TIM6);
-
 		//ここに割り込み入れる
 		//INTC_sys();
 
@@ -247,8 +246,8 @@ void TIM7_DAC_IRQHandler(void)
 			LL_TIM_ClearFlag_UPDATE(TIM7);
 
 			//ここに割り込み入れる
-			//INTC_sen();
-			LL_ADC_REG_StartConversion(ADC1);		// AD変換の処???��?��??��?��?を始め???��?��??��?��?
+			INTC_sen();
+			//LL_ADC_REG_StartConversion(ADC1);		// AD変換の処???��?��??��?��?を始め???��?��??��?��?
 	}
   /* USER CODE END TIM7_DAC_IRQn 0 */
   

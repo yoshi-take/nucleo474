@@ -9,6 +9,7 @@
 #include "hal/hal_tim.h"
 #include "hal/hal_led.h"
 #include "hal/hal_gyro.h"
+#include "hal/hal_dist.h"
 
 //**************************************************
 // 定義（define）

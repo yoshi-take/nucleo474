@@ -73,7 +73,7 @@ typedef struct {
 //**************************************************
 uint16_t	adcConverterData[ADC_CONVERT_DATA_BUFFR_SIZE]	= {0,0,0,0};
 PRIVATE	stDIST_SEN	st_sen[DIST_SEN_MAX];				// 距離センサ
-
+volatile PUBLIC		BOOL	bl_DMA	= TRUE;
 
 //**************************************************
 // プロトタイプ宣言（ファイル内で必要なものだけ記述）
@@ -110,9 +110,9 @@ PUBLIC void DIST_Pol_Side( void )
 
 	/* 無発光時の値取得 */
 	LL_ADC_REG_StartConversion(ADC1);
-	while(0);		// DMA転送終了待ち
+	while(LL_ADC_IsActiveFlag_EOC(ADC1));		// DMA転送終了待ち
 
-	st_sen[DIST_SEN_R_SIDE].s_offset = (SHORT)adcConverterData[0];
+	st_sen[DIST_SEN_R_SIDE].s_offset = (SHORT)adcConverterData[2];
 	st_sen[DIST_SEN_L_SIDE].s_offset = (SHORT)adcConverterData[3];
 
 	/* 前壁LED点灯 */
@@ -124,12 +124,12 @@ PUBLIC void DIST_Pol_Side( void )
 
 	/* 発光時の値取得 */
 	LL_ADC_REG_StartConversion(ADC1);
-	while(0);		// DMA転送終了待ち
+	while(LL_ADC_IsActiveFlag_EOC(ADC1));		// DMA転送終了待ち
 
 	/* 発光時の値と無発光時の値で差分を取得 */
 	st_sen[DIST_SEN_R_SIDE].s_old = st_sen[DIST_SEN_R_SIDE].s_now;		// バッファリング
 	st_sen[DIST_SEN_L_SIDE].s_old = st_sen[DIST_SEN_L_SIDE].s_now;		// バッファリング
-	st_sen[DIST_SEN_R_SIDE].s_now = (SHORT)adcConverterData[0] - st_sen[DIST_SEN_R_SIDE].s_offset;		// 現在値書き換え
+	st_sen[DIST_SEN_R_SIDE].s_now = (SHORT)adcConverterData[2] - st_sen[DIST_SEN_R_SIDE].s_offset;		// 現在値書き換え
 	st_sen[DIST_SEN_L_SIDE].s_now = (SHORT)adcConverterData[3] - st_sen[DIST_SEN_L_SIDE].s_offset;		// 現在値書き換え
 
 	/* ログ */
@@ -170,10 +170,11 @@ PUBLIC void DIST_Pol_Front( void )
 
 	/* 無発光時の値取得 */
 	LL_ADC_REG_StartConversion(ADC1);
-	while(0);		// DMA転送終了待ち
+	while(LL_ADC_IsActiveFlag_EOC(ADC1));		// DMA転送終了待ち
+	//bl_DMA	= TRUE;
 
 	st_sen[DIST_SEN_R_FRONT].s_offset = (SHORT)adcConverterData[0];
-	st_sen[DIST_SEN_L_FRONT].s_offset = (SHORT)adcConverterData[3];
+	st_sen[DIST_SEN_L_FRONT].s_offset = (SHORT)adcConverterData[1];
 
 	/* 前壁LED点灯 */
 	LL_GPIO_SetOutputPin(IR_FRONT_R_GPIO_Port,IR_FRONT_R_Pin);
@@ -184,13 +185,14 @@ PUBLIC void DIST_Pol_Front( void )
 
 	/* 発光時の値取得 */
 	LL_ADC_REG_StartConversion(ADC1);
-	while(0);		// DMA転送終了待ち
+	while(LL_ADC_IsActiveFlag_EOC(ADC1));		// DMA転送終了待ち
+	//bl_DMA	= TRUE;
 
 	/* 発光時の値と無発光時の値で差分を取得 */
 	st_sen[DIST_SEN_R_FRONT].s_old = st_sen[DIST_SEN_R_FRONT].s_now;		// バッファリング
 	st_sen[DIST_SEN_L_FRONT].s_old = st_sen[DIST_SEN_L_FRONT].s_now;		// バッファリング
 	st_sen[DIST_SEN_R_FRONT].s_now = (SHORT)adcConverterData[0] - st_sen[DIST_SEN_R_FRONT].s_offset;		// 現在値書き換え
-	st_sen[DIST_SEN_L_FRONT].s_now = (SHORT)adcConverterData[3] - st_sen[DIST_SEN_L_FRONT].s_offset;		// 現在値書き換え
+	st_sen[DIST_SEN_L_FRONT].s_now = (SHORT)adcConverterData[1] - st_sen[DIST_SEN_L_FRONT].s_offset;		// 現在値書き換え
 
 
 	/* 前壁LED消灯 */
@@ -244,7 +246,7 @@ PUBLIC void DIST_Check( void ){
 					(int)DIST_getNowVal(DIST_SEN_L_SIDE)
 					);
 
-		LL_mDelay( 500 );
+		LL_mDelay( 50 );
 
 	}
 }

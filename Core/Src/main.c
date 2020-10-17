@@ -138,17 +138,12 @@ int main(void)
   MX_SPI2_Init();
   MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
-  ADC1_DMA1_ConvertStart();
   setbuf(stdout, NULL);		// printf実行前に書くやつ
   TIM6_Start();					// 制御の割り込み許可
-  TIM7_Start();					// センサの割り込み許可
   //GYRO_init();
 
   ToF_init();
   ToF_ConfigureDefault();
-
-
-
 
   /* USER CODE END 2 */
  

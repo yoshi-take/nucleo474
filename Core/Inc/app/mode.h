@@ -14,7 +14,7 @@
 #define		SW_ON		(OFF)
 #define		SW_OFF		(ON)
 
-#define		SW_CHATTERING_WAIT	(200)		// SWのチャタリング対策
+#define		SW_CHATTERING_WAIT	(170)		// SWのチャタリング対策
 
 //**************************************************
 // 列挙体（enum）
@@ -52,5 +52,6 @@ typedef enum{
 //**************************************************
 PUBLIC void MODE_inc(void);
 PUBLIC void MODE_exe( void );
+PUBLIC	void MODE_exe_common( void );
 
 #endif /* INC_MODE_H_ */
