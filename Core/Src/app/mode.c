@@ -13,6 +13,7 @@
 #include "hal/hal_gyro.h"
 #include "hal/hal_enc.h"
 #include "hal/hal_dist.h"
+#include "hal/hal_spk.h"
 
 
 //**************************************************
@@ -111,7 +112,9 @@ PUBLIC void	MODE_exe( void ){
 			break;
 
 		case MODE_9:
-			ADC1_DMA1_TransferComplete_Callback();
+			 //ADC1_DMA1_ConvertStart();
+			 printf("DMA check \n\r");
+			DIST_Check();
 			break;
 
 		case MODE_10:
@@ -123,6 +126,7 @@ PUBLIC void	MODE_exe( void ){
 			break;
 
 		case MODE_11:
+			SPK_on(A4,16.0f,120);
 			break;
 
 		case MODE_12:

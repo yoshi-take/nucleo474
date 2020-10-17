@@ -9,6 +9,7 @@
 #include "app/mode.h"
 #include "hal/hal_led.h"
 #include "hal/hal_tim.h"
+#include "hal/hal_dist.h"
 #include "parameter.h"
 
 
@@ -58,6 +59,7 @@ typedef struct{
 	stDIST_FRONT_SEN	st_front[DIST_SEN_L_FRONT+1];		// センサデータ(前壁のみ)
 }stDIST_FLASH;
 #endif
+
 /* 壁センサのログ用 */
 typedef struct {
 	SHORT		s_frontR;
@@ -65,11 +67,12 @@ typedef struct {
 	SHORT		s_sideR;
 	SHORT		s_sideL;
 }stDIST_SEN_LOG;
+
 //**************************************************
 // グローバル変数
 //**************************************************
-uint16_t	adcConverterData[ADC_CONVERT_DATA_BUFFR_SIZE]	= {4,4,4,4};
-
+uint16_t	adcConverterData[ADC_CONVERT_DATA_BUFFR_SIZE]	= {0,0,0,0};
+PRIVATE	stDIST_SEN	st_sen[DIST_SEN_MAX];				// 距離センサ
 
 
 //**************************************************
@@ -77,45 +80,17 @@ uint16_t	adcConverterData[ADC_CONVERT_DATA_BUFFR_SIZE]	= {4,4,4,4};
 //**************************************************
 
 // *************************************************************************
-//   機能		： 距離センサ用（横壁）ポーリング関数
+//   機能		： 距離センサの値を取得する
 //   注意		： なし
-//   メモ		： 割り込みから実行される
+//   メモ		： ☆
 //   引数		： なし
 //   返り値		： なし
 // **************************    履    歴    *******************************
-//		v1.0		2020.2.6			TKR				新規
+// 		v1.0		2019.5.5			TKR			新規
 // *************************************************************************/
-PUBLIC void DIST_Pol_Side( void )
+PUBLIC SHORT DIST_getNowVal( enDIST_SEN_ID en_id )
 {
-	/* 無発光時の値取得 */
-
-	/* 横壁LED点灯 */
-	LL_GPIO_SetOutputPin(IR_SIDE_R_GPIO_Port,IR_SIDE_R_Pin);
-	LL_GPIO_SetOutputPin(IR_SIDE_L_GPIO_Port,IR_SIDE_L_Pin);
-
-	/* 発光安定待ち */
-	TIME_waitFree( SEN_WAIT_CNT );
-
-	/* 発光時の値と無発光時の値で差分を取得 */
-
-	/* ログ */
-#if 0
-	if(us_SenLogPt != DIST_LOG){
-
-		/* ログ記録 */
-		if( uc_sencycle == DIST_LOG_CYCLE ){
-			st_DistSenLog[us_SenLogPt].s_sideR	= st_sen[DIST_SEN_R_SIDE].s_now;	// 右横壁
-			st_DistSenLog[us_SenLogPt].s_sideL	= st_sen[DIST_SEN_L_SIDE].s_now;	// 左横壁
-			uc_sencycle	= 0;
-			us_SenLogPt++;
-			if(us_SenLogPt == DIST_LOG)bl_senlog = FALSE;
-		}
-	}
-#endif
-
-	/* 横壁LED消灯 */
-	LL_GPIO_ResetOutputPin(IR_SIDE_R_GPIO_Port,IR_SIDE_R_Pin);
-	LL_GPIO_ResetOutputPin(IR_SIDE_L_GPIO_Port,IR_SIDE_L_Pin);
+	return st_sen[en_id].s_now;
 }
 
 // *************************************************************************
@@ -125,11 +100,80 @@ PUBLIC void DIST_Pol_Side( void )
 //   引数		： なし
 //   返り値		： なし
 // **************************    履    歴    *******************************
-//		v1.0		2020.2.6			TKR				新規
+//		v1.0		2020.10.17			TKR				新規
+// *************************************************************************/
+PUBLIC void DIST_Pol_Side( void )
+{
+	/* 前壁LED消灯 */
+	LL_GPIO_ResetOutputPin(IR_SIDE_R_GPIO_Port,IR_SIDE_R_Pin);
+	LL_GPIO_ResetOutputPin(IR_SIDE_L_GPIO_Port,IR_SIDE_L_Pin);
+
+	/* 無発光時の値取得 */
+	LL_ADC_REG_StartConversion(ADC1);
+	while(0);		// DMA転送終了待ち
+
+	st_sen[DIST_SEN_R_SIDE].s_offset = (SHORT)adcConverterData[0];
+	st_sen[DIST_SEN_L_SIDE].s_offset = (SHORT)adcConverterData[3];
+
+	/* 前壁LED点灯 */
+	LL_GPIO_SetOutputPin(IR_SIDE_R_GPIO_Port,IR_SIDE_R_Pin);
+	LL_GPIO_SetOutputPin(IR_SIDE_L_GPIO_Port,IR_SIDE_L_Pin);
+
+	/* 発光安定待ち */
+	TIME_waitFree( SEN_WAIT_CNT );
+
+	/* 発光時の値取得 */
+	LL_ADC_REG_StartConversion(ADC1);
+	while(0);		// DMA転送終了待ち
+
+	/* 発光時の値と無発光時の値で差分を取得 */
+	st_sen[DIST_SEN_R_SIDE].s_old = st_sen[DIST_SEN_R_SIDE].s_now;		// バッファリング
+	st_sen[DIST_SEN_L_SIDE].s_old = st_sen[DIST_SEN_L_SIDE].s_now;		// バッファリング
+	st_sen[DIST_SEN_R_SIDE].s_now = (SHORT)adcConverterData[0] - st_sen[DIST_SEN_R_SIDE].s_offset;		// 現在値書き換え
+	st_sen[DIST_SEN_L_SIDE].s_now = (SHORT)adcConverterData[3] - st_sen[DIST_SEN_L_SIDE].s_offset;		// 現在値書き換え
+
+	/* ログ */
+	#if 0
+		if(us_SenLogPt != DIST_LOG){
+
+			/* ログ記録 */
+			if( uc_sencycle == DIST_LOG_CYCLE ){
+				st_DistSenLog[us_SenLogPt].s_sideR	= st_sen[DIST_SEN_R_SIDE].s_now;	// 右横壁
+				st_DistSenLog[us_SenLogPt].s_sideL	= st_sen[DIST_SEN_L_SIDE].s_now;	// 左横壁
+				uc_sencycle	= 0;
+				us_SenLogPt++;
+				if(us_SenLogPt == DIST_LOG)bl_senlog = FALSE;
+			}
+		}
+	#endif
+
+	/* 前壁LED消灯 */
+	LL_GPIO_ResetOutputPin(IR_SIDE_R_GPIO_Port,IR_SIDE_R_Pin);
+	LL_GPIO_ResetOutputPin(IR_SIDE_L_GPIO_Port,IR_SIDE_L_Pin);
+
+}
+
+// *************************************************************************
+//   機能		： 距離センサ用（横壁）ポーリング関数
+//   注意		： なし
+//   メモ		： 割り込みから実行される
+//   引数		： なし
+//   返り値	： なし
+// **************************    履    歴    *******************************
+//		v1.0		2020.10.17			TKR				新規
 // *************************************************************************/
 PUBLIC void DIST_Pol_Front( void )
 {
+	/* 前壁LED消灯 */
+	LL_GPIO_ResetOutputPin(IR_FRONT_R_GPIO_Port,IR_FRONT_R_Pin);
+	LL_GPIO_ResetOutputPin(IR_FRONT_L_GPIO_Port,IR_FRONT_L_Pin);
+
 	/* 無発光時の値取得 */
+	LL_ADC_REG_StartConversion(ADC1);
+	while(0);		// DMA転送終了待ち
+
+	st_sen[DIST_SEN_R_FRONT].s_offset = (SHORT)adcConverterData[0];
+	st_sen[DIST_SEN_L_FRONT].s_offset = (SHORT)adcConverterData[3];
 
 	/* 前壁LED点灯 */
 	LL_GPIO_SetOutputPin(IR_FRONT_R_GPIO_Port,IR_FRONT_R_Pin);
@@ -138,40 +182,27 @@ PUBLIC void DIST_Pol_Front( void )
 	/* 発光安定待ち */
 	TIME_waitFree( SEN_WAIT_CNT );
 
+	/* 発光時の値取得 */
+	LL_ADC_REG_StartConversion(ADC1);
+	while(0);		// DMA転送終了待ち
+
 	/* 発光時の値と無発光時の値で差分を取得 */
+	st_sen[DIST_SEN_R_FRONT].s_old = st_sen[DIST_SEN_R_FRONT].s_now;		// バッファリング
+	st_sen[DIST_SEN_L_FRONT].s_old = st_sen[DIST_SEN_L_FRONT].s_now;		// バッファリング
+	st_sen[DIST_SEN_R_FRONT].s_now = (SHORT)adcConverterData[0] - st_sen[DIST_SEN_R_FRONT].s_offset;		// 現在値書き換え
+	st_sen[DIST_SEN_L_FRONT].s_now = (SHORT)adcConverterData[3] - st_sen[DIST_SEN_L_FRONT].s_offset;		// 現在値書き換え
 
-	/* ログ */
-#if 0
-	if(us_SenLogPt != DIST_LOG){
 
-		/* ログ記録 */
-		if( uc_sencycle == DIST_LOG_CYCLE ){
-			st_DistSenLog[us_SenLogPt].s_sideR	= st_sen[DIST_SEN_R_SIDE].s_now;	// 右横壁
-			st_DistSenLog[us_SenLogPt].s_sideL	= st_sen[DIST_SEN_L_SIDE].s_now;	// 左横壁
-			uc_sencycle	= 0;
-			us_SenLogPt++;
-			if(us_SenLogPt == DIST_LOG)bl_senlog = FALSE;
-		}
-	}
-#endif
 	/* 前壁LED消灯 */
 	LL_GPIO_ResetOutputPin(IR_FRONT_R_GPIO_Port,IR_FRONT_R_Pin);
 	LL_GPIO_ResetOutputPin(IR_FRONT_L_GPIO_Port,IR_FRONT_L_Pin);
 }
 
 // ADCの有効化，AD変換終了時のDMAの割り込みを有効化
-PUBLIC void ADC1_Start(void){
+PUBLIC void ADC1_DMA1_ConvertStart(void){
 	LL_DMA_EnableIT_TC(DMA1,LL_DMA_CHANNEL_1);
 	LL_ADC_Enable(ADC1);
-}
 
-// ADC
-PUBLIC void ADC1_Start_DMA1(void){
-	ADC1_DMA1_ConvertStart();
-}
-
-// ADCのDMA変換を開始する
-PUBLIC void ADC1_DMA1_ConvertStart(void){
 	LL_DMA_DisableChannel(DMA1,LL_DMA_CHANNEL_1);
 
 	LL_DMA_ConfigAddresses(DMA1,LL_DMA_CHANNEL_1,
@@ -182,14 +213,38 @@ PUBLIC void ADC1_DMA1_ConvertStart(void){
 
 	LL_DMA_EnableChannel(DMA1,LL_DMA_CHANNEL_1);
 
-	LL_ADC_REG_StartConversion(ADC1);		// AD変換の処理を始める
-
 }
 
 PUBLIC void ADC1_DMA1_TransferComplete_Callback(void){
 
-	LL_ADC_ClearFlag_EOC(ADC1);
-	printf("%d,%d,%d,%d\n\r",adcConverterData[0],adcConverterData[1],adcConverterData[2],adcConverterData[3]);
-	ADC1_Start_DMA1();
+	printf("%d,%d,%d,%d\n\r",adcConverterData[0],adcConverterData[3],adcConverterData[1],adcConverterData[2]);
+
 }
 
+// *************************************************************************
+//   機能		： 距離センサの値を表示する
+//   注意		： なし
+//   メモ		： なし
+//   引数		： なし
+//   返り値	： なし
+//   その他	： hal_dist
+//**************************    履    歴    *******************************
+// 		v1.0		2019.5.5			TKR			新規
+// *************************************************************************/
+PUBLIC void DIST_Check( void ){
+
+	LED_offAll();	// インジゲータ消灯
+
+	while(1){
+
+		printf(" WallSensor [R_F]%5d [L_F]%5d [R_S]%5d [L_S]%5d \r",
+					(int)DIST_getNowVal(DIST_SEN_R_FRONT),
+					(int)DIST_getNowVal(DIST_SEN_L_FRONT),
+					(int)DIST_getNowVal(DIST_SEN_R_SIDE),
+					(int)DIST_getNowVal(DIST_SEN_L_SIDE)
+					);
+
+		LL_mDelay( 500 );
+
+	}
+}

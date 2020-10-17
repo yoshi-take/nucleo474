@@ -40,7 +40,7 @@ PUBLIC void SPK_on( uint16_t frq, float beat, int bpm  ){
 	/* 分周する値を求める */
 	uint16_t scale = 0;
 	scale	= 100000 / frq - 1;					// 100kHzから分周を行い所望の周波数を出力する
-	LL_TIM_SetPrescalar(TIM2,scale);		// 分周値を設定
+	LL_TIM_SetPrescaler(TIM2,scale);		// 分周値を設定
 
 	/* PWM出力 */
 	LL_TIM_OC_SetCompareCH3(TIM2, 849);		// 1700÷2-1（Duty比50%）

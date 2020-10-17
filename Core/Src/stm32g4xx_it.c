@@ -247,7 +247,8 @@ void TIM7_DAC_IRQHandler(void)
 			LL_TIM_ClearFlag_UPDATE(TIM7);
 
 			//ここに割り込み入れる
-			INTC_sen();
+			//INTC_sen();
+			LL_ADC_REG_StartConversion(ADC1);		// AD変換の処???��?��??��?��?を始め???��?��??��?��?
 	}
   /* USER CODE END TIM7_DAC_IRQn 0 */
   
