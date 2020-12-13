@@ -14,6 +14,7 @@
 #include "hal/hal_enc.h"
 #include "hal/hal_dist.h"
 #include "hal/hal_spk.h"
+#include "hal/hal_battery.h"
 
 
 //**************************************************
@@ -51,7 +52,7 @@ PUBLIC	void MODE_exe_common( void ){
 
 	ADC1_DMA1_ConvertStart();		// DMAの初期化
 	TIM7_Start();							// センサの割り込み許可
-	  // キャリブレーション
+	  // キャリブレーション動作入れる（いろんなセンサ）
 }
 
 // *************************************************************************
@@ -92,13 +93,16 @@ PUBLIC void	MODE_exe( void ){
 			break;
 
 		case MODE_4:
+			/*
 			hal_ADC3Start();
 
 			while(1){
 				printf("%d\n\r",hal_ADC3SingleConversion());
 				LL_mDelay(500);
 			}
+			*/
 
+			BAT_Check();
 			break;
 
 		case MODE_5:

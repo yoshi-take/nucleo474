@@ -38,6 +38,7 @@ extern	"C"	{
 //**************************************************
 PUBLIC void hal_ADC3Start(void);
 PUBLIC USHORT hal_ADC3SingleConversion(void);
+PUBLIC	void BAT_init(void);
 PUBLIC void BAT_Pol( void );
 PUBLIC void BAT_Check( void );
 PUBLIC FLOAT BAT_getLv( void );

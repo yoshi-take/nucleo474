@@ -64,6 +64,7 @@ PUBLIC void SPK_on( uint16_t frq, float beat, int bpm );
 PUBLIC void SPK_Off(void);
 PUBLIC void SPK_debug( void );
 PUBLIC void SPK_success( void );
+PUBLIC	void SPK_alert( void );
 
 #ifdef	__cplusplus
 }
