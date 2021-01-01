@@ -1,11 +1,11 @@
 //**************************************************
 // インクルードファイル（include）
 //**************************************************
-#include <hal/hal_battery.h>
 #include "main.h"
 #include "typedefine.h"
 #include <stdio.h>
 
+#include "parameter.h"
 #include "app/mode.h"
 #include "hal/hal_led.h"
 #include "hal/hal_dcm.h"
@@ -33,10 +33,26 @@
 // グローバル変数
 //**************************************************
 PRIVATE enMODE		en_Mode;				// 現在のモード
+PRIVATE LONG			l_DiffCnt;			// パルスカウントの微分値
+PRIVATE LONG			l_SumCnt;		// パルスカウントの積分値
 
 //**************************************************
 // プロトタイプ宣言（ファイル内で必要なものだけ記述）
 //**************************************************
+
+// *************************************************************************
+//   機能		： モードの初期化。
+//   注意		： なし
+//   メモ		： なし
+//   引数		： なし
+//   返り値		： なし
+// **************************    履    歴    *******************************
+//		v1.0		2021.1.1			TKR				新規
+// *************************************************************************/
+PUBLIC void MODE_init( void ){
+	l_SumCnt 		= 0;
+	l_DiffCnt			= 0;
+}
 
 // *************************************************************************
 //   機能		： モードを実行する際に共通して行う処理
@@ -71,6 +87,10 @@ PUBLIC void	MODE_exe( void ){
 	switch( en_Mode ){
 
 		case MODE_0:
+			LED_onAll();
+			LL_mDelay(500);
+			LED_offAll();
+			LL_mDelay(500);
 			break;
 
 		case MODE_1:
@@ -93,15 +113,6 @@ PUBLIC void	MODE_exe( void ){
 			break;
 
 		case MODE_4:
-			/*
-			hal_ADC3Start();
-
-			while(1){
-				printf("%d\n\r",hal_ADC3SingleConversion());
-				LL_mDelay(500);
-			}
-			*/
-
 			BAT_Check();
 			break;
 
@@ -152,6 +163,7 @@ PUBLIC void	MODE_exe( void ){
 			break;
 
 		case MODE_12:
+			DIST_Check();
 			break;
 
 		case MODE_13:
@@ -322,20 +334,54 @@ PUBLIC void MODE_inc( void ){
 }
 
 // *************************************************************************
+//   機能		： モードを減算変更する。
+//   注意		： なし
+//   メモ		： エンコーダでモード変更できるように追加
+//   引数		： なし
+//   返り値		： なし
+// **************************    履    歴    *******************************
+//		v1.0		2019.10.27			TKR				新規
+// *************************************************************************/
+PUBLIC void MODE_dec( void ){
+
+	/* 最大値チェック */
+	if( MODE_0 == en_Mode ){
+		en_Mode = MODE_MAX;
+	}
+
+	en_Mode--;
+
+	MODE_chg(en_Mode);		// モード変更
+
+}
+
+// *************************************************************************
 //   機能		： モードの切り替えチェック
 //   注意		： なし
 //   メモ		：
 //   引数		： なし
 //   返り値		： なし
 // **************************    履    歴    *******************************
-//		v1.0		2019.10.27			TKR				新規
+//		v1.0		2021.1.1			TKR				新規
 // *************************************************************************/
 PUBLIC void MODE_chkMode( void ){
-/*
-	if (l_CntR > MODE_CHG_COUNT ){
+
+	LONG	l_dummy	= 0;
+
+	ENC_GetDiv(&l_DiffCnt, &l_dummy);						// 差分の取得
+	if(l_DiffCnt < abs((int)(l_DiffCnt)))l_DiffCnt = 0;	// 静止状態のときのオフセット値をカットする
+	l_SumCnt	+= l_DiffCnt;
+
+	if(l_SumCnt  > MODE_CHG_COUNT){		// プラスカウント
+		l_SumCnt	= 0;
 		MODE_inc();
+
+	}else if(l_SumCnt < MODE_CHG_COUNT * (-1)){		// マイナスカウント
+		l_SumCnt	= 0;
+		MODE_dec();
 	}
-*/
+
+	l_DiffCnt	= 0;
 }
 
 

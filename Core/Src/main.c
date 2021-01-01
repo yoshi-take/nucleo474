@@ -147,6 +147,7 @@ int main(void)
   ToF_init();						// ToFセンサの初期化
   ToF_ConfigureDefault();
 
+  MODE_init();					// モード設定の初期化
   /* USER CODE END 2 */
  
  

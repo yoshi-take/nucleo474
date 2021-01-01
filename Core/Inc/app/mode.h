@@ -16,6 +16,7 @@
 
 #define		SW_CHATTERING_WAIT	(170)		// SWのチャタリング対策
 
+#define		MODE_CHG_COUNT		(20000)		// モードが変更されるまでのパルス数
 //**************************************************
 // 列挙体（enum）
 //**************************************************
@@ -50,7 +51,8 @@ typedef enum{
 //**************************************************
 // プロトタイプ宣言（ファイル内で必要なものだけ記述）
 //**************************************************
-PUBLIC void MODE_inc(void);
+PUBLIC void MODE_inc( void );
+PUBLIC void MODE_dec( void );
 PUBLIC void MODE_exe( void );
 PUBLIC	void MODE_exe_common( void );
 
